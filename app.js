@@ -1943,6 +1943,7 @@ const DOCTORS_DATABASE = [
 // 3. Central Application State
 // ---------------------------------------------------------------------------
 const appState = {
+  language: 'en',
   currentStep: 1, // 1: Sign-in, 2: Pain assessment, 3: Cure & Analysis, 4: Doctor Finder, 5: Confirmed Ticket
   patient: {
     name: '',
@@ -2760,6 +2761,27 @@ const TRANSLATIONS = {
   }
 };
 
+const INTERFACE_TRANSLATIONS = {
+  en: {
+    chatMode: 'AI Chatbot Mode', manualMode: 'Step-by-Step Mode', history: 'History', signIn: 'Sign In', privacy: 'Privacy Guard: Active', guest: 'Guest Patient', emergency: 'Emergency (112)',
+    welcomeKicker: 'YOUR NEXT STEP TO BETTER CARE', welcomeTagline: 'A calmer way to understand symptoms, find the right specialist, and move forward.', welcomeTell: 'Tell us', welcomeUnderstand: 'Understand', welcomeFind: 'Find care', welcomeStart: 'Begin your care path', welcomeNote: 'Private demo experience · Your journey starts with a quick sign in',
+    chatTitle: 'CarePath AI Health Copilot', chatStatus: 'Online · Symptom guidance and specialist matching', location: 'Location:', reset: 'Reset Chat', attach: 'Attach File / Photo', input: 'Type your symptoms or ask a health question...', speak: 'Speak', send: 'Send Message',
+    specialists: 'Matched Specialist Doctors', filtered: 'Filtered by Disease & City', symptom: 'Disease / Symptom:', city: 'City Location:'
+  },
+  te: {
+    chatMode: 'AI చాట్‌బాట్ మోడ్', manualMode: 'దశలవారీ మోడ్', history: 'చరిత్ర', signIn: 'సైన్ ఇన్', privacy: 'గోప్యత రక్షణ: యాక్టివ్', guest: 'అతిథి పేషెంట్', emergency: 'అత్యవసరం (112)',
+    welcomeKicker: 'మెరుగైన సంరక్షణకు మీ తదుపరి అడుగు', welcomeTagline: 'లక్షణాలను అర్థం చేసుకుని, సరైన నిపుణుడిని కనుగొని ముందుకు సాగడానికి ప్రశాంతమైన మార్గం.', welcomeTell: 'చెప్పండి', welcomeUnderstand: 'అర్థం చేసుకోండి', welcomeFind: 'సంరక్షణ పొందండి', welcomeStart: 'మీ కేర్‌పాత్ ప్రారంభించండి', welcomeNote: 'ప్రైవేట్ డెమో అనుభవం · మీ ప్రయాణం త్వరిత సైన్ ఇన్‌తో ప్రారంభమవుతుంది',
+    chatTitle: 'కేర్‌పాత్ AI ఆరోగ్య సహాయకుడు', chatStatus: 'ఆన్‌లైన్ · లక్షణాల మార్గదర్శనం మరియు నిపుణుల ఎంపిక', location: 'ప్రాంతం:', reset: 'చాట్ రీసెట్', attach: 'ఫైల్ / ఫోటో జతచేయండి', input: 'మీ లక్షణాలను టైప్ చేయండి లేదా ఆరోగ్య ప్రశ్న అడగండి...', speak: 'మాట్లాడండి', send: 'సందేశం పంపండి',
+    specialists: 'ఎంపికైన నిపుణులైన డాక్టర్లు', filtered: 'సమస్య & నగరం ఆధారంగా', symptom: 'వ్యాధి / లక్షణం:', city: 'నగరం:'
+  },
+  hi: {
+    chatMode: 'AI चैटबॉट मोड', manualMode: 'चरण-दर-चरण मोड', history: 'इतिहास', signIn: 'साइन इन', privacy: 'गोपनीयता सुरक्षा: सक्रिय', guest: 'गेस्ट मरीज', emergency: 'आपातकाल (112)',
+    welcomeKicker: 'बेहतर देखभाल की ओर आपका अगला कदम', welcomeTagline: 'लक्षण समझने, सही विशेषज्ञ खोजने और आगे बढ़ने का शांत तरीका।', welcomeTell: 'बताएं', welcomeUnderstand: 'समझें', welcomeFind: 'देखभाल पाएं', welcomeStart: 'अपना केयरपाथ शुरू करें', welcomeNote: 'निजी डेमो अनुभव · आपकी यात्रा त्वरित साइन इन से शुरू होती है',
+    chatTitle: 'केयरपाथ AI स्वास्थ्य सहायक', chatStatus: 'ऑनलाइन · लक्षण मार्गदर्शन और विशेषज्ञ मिलान', location: 'स्थान:', reset: 'चैट रीसेट', attach: 'फाइल / फोटो जोड़ें', input: 'अपने लक्षण लिखें या स्वास्थ्य प्रश्न पूछें...', speak: 'बोलें', send: 'संदेश भेजें',
+    specialists: 'मिलान किए गए विशेषज्ञ डॉक्टर', filtered: 'समस्या और शहर के अनुसार', symptom: 'बीमारी / लक्षण:', city: 'शहर:'
+  }
+};
+
 function setAppLanguage(langCode) {
   if (!TRANSLATIONS[langCode]) langCode = 'en';
   appState.language = langCode;
@@ -2774,11 +2796,58 @@ function setAppLanguage(langCode) {
   if (headerSelect) headerSelect.value = langCode;
 
   const t = TRANSLATIONS[langCode];
+  const ui = INTERFACE_TRANSLATIONS[langCode];
 
   const safeText = (selector, text) => {
     const el = document.querySelector(selector);
     if (el && text) el.textContent = text;
   };
+
+  const setControlText = (selector, text) => {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    const textNodes = Array.from(el.childNodes).filter(node => node.nodeType === Node.TEXT_NODE);
+    if (textNodes.length) textNodes[textNodes.length - 1].nodeValue = ` ${text}`;
+    else el.append(document.createTextNode(text));
+  };
+
+  setControlText('#btnModeChat', ui.chatMode);
+  setControlText('#btnModeManual', ui.manualMode);
+  setControlText('#btnHistoryHeader', ui.history);
+  setControlText('#btnLoginHeader', ui.signIn);
+  setControlText('#btnPrivacyShield', ui.privacy);
+  safeText('#userDisplayName', isSignedIn() ? `${appState.patient.name} (${appState.patient.city || 'Hyderabad'})` : ui.guest);
+  setControlText('#btnSos', ui.emergency);
+  safeText('.welcome-kicker', ui.welcomeKicker);
+  safeText('.welcome-tagline', ui.welcomeTagline);
+  safeText('.welcome-route span:nth-of-type(1)', `01  ${ui.welcomeTell}`);
+  safeText('.welcome-route span:nth-of-type(2)', `02  ${ui.welcomeUnderstand}`);
+  safeText('.welcome-route span:nth-of-type(3)', `03  ${ui.welcomeFind}`);
+  safeText('.welcome-start-btn span', ui.welcomeStart);
+  safeText('.welcome-note', `●  ${ui.welcomeNote}`);
+  safeText('.full-chat-title', ui.chatTitle);
+  const chatStatus = document.querySelector('.full-chat-status');
+  if (chatStatus) chatStatus.innerHTML = `<span class="status-green-dot"></span> ${ui.chatStatus}`;
+  safeText('.chat-city-select-box span', ui.location);
+  setControlText('.btn-clear-chat', ui.reset);
+  setControlText('.full-chat-attach-btn', ui.attach);
+  setControlText('#btnFullChatMic', ui.speak);
+  setControlText('.full-chat-send-btn', ui.send);
+  const chatInput = document.querySelector('#fullChatInput');
+  if (chatInput) chatInput.placeholder = ui.input;
+  safeText('.side-panel-title', ui.specialists);
+  safeText('.side-panel-subtitle', ui.filtered);
+  safeText('.side-filter-label', `🏥 ${ui.symptom}`);
+  safeText('.side-filter-item:nth-child(2) .side-filter-label', `📍 ${ui.city}`);
+  const sideCategorySelect = document.querySelector('#sideDoctorCategorySelect');
+  if (sideCategorySelect) {
+    Array.from(sideCategorySelect.options).forEach(option => {
+      const category = PAIN_CATALOG[option.value];
+      if (!category) return;
+      const categoryName = langCode === 'te' ? category.name_te : langCode === 'hi' ? category.name_hi : category.name;
+      option.textContent = `${category.icon} ${categoryName}`;
+    });
+  }
 
   // Header & Stepper
   safeText('.brand-tagline', t.brandTagline);
@@ -3447,6 +3516,7 @@ window.clearAllHistory = function() {
 // Initialize session on load
 document.addEventListener('DOMContentLoaded', function() {
   loadSavedUserSession();
+  setAppLanguage(appState.language);
 });
 
 window.handleFullChatFileUpload = function(event) {
