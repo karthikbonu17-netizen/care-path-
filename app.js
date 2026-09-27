@@ -2205,13 +2205,16 @@ function handleSignInSubmit() {
   }
 
   appState.patient = { name, phone, email: email || 'Not provided', age: age || '25', gender, city: city || 'Hyderabad' };
+  localStorage.setItem('carepath_user', JSON.stringify(appState.patient));
 
   // Update header status
   const userDisplay = document.querySelector('#headerUserDisplay');
   if (userDisplay) {
-    userDisplay.innerHTML = `<span class="user-dot"></span><span>${escapeHtml(name)} (${escapeHtml(city)})</span>`;
+    userDisplay.innerHTML = `<span class="user-dot"></span><svg class="header-control-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 20c.7-3.1 3.1-5 7-5s6.3 1.9 7 5"/></svg><span>${escapeHtml(name)} (${escapeHtml(city)})</span>`;
   }
 
+  updateUserHeaderDisplay();
+  unlockCareInterfaces();
   goToStep(2);
 }
 
@@ -2251,9 +2254,17 @@ window.selectPainCategory = function(catKey) {
   const sideSelect = document.querySelector('#sideDoctorCategorySelect');
   if (sideSelect) {
     sideSelect.value = catKey;
-    if (window.renderSidePanelDoctors) window.renderSidePanelDoctors();
   }
+  refreshMatchedSpecialists(catKey);
 };
+
+function refreshMatchedSpecialists(categoryKey) {
+  const sideSelect = document.querySelector('#sideDoctorCategorySelect');
+  if (sideSelect && categoryKey && PAIN_CATALOG[categoryKey]) {
+    sideSelect.value = categoryKey;
+  }
+  if (window.renderSidePanelDoctors) window.renderSidePanelDoctors();
+}
 
 window.selectSeverityLevel = function(level) {
   appState.painAssessment.severityLevel = level;
@@ -2986,6 +2997,7 @@ window.handleAgentFormSubmit = async function(e) {
     if (data.success) {
       appendAgentMessage('bot', data.reply, data.suggestedActions);
       if (data.autoCategory) {
+        syncSidePanelCity(appState.patient.city || 'Hyderabad');
         selectPainCategory(data.autoCategory);
       }
     } else {
@@ -3179,6 +3191,12 @@ window.clearUploadedReport = function() {
 let currentFullChatAttachment = null;
 
 window.switchAppMode = function(mode) {
+  if (!isSignedIn()) {
+    openLoginModal();
+    showToastNotification('Please sign in before opening Carepath.');
+    return;
+  }
+
   appState.mode = mode || 'chat';
 
   const btnChat = document.querySelector('#btnModeChat');
@@ -3205,6 +3223,28 @@ window.switchAppMode = function(mode) {
     showToastNotification('📝 Switched to Step-by-Step Guided Form Mode');
   }
 };
+
+function isSignedIn() {
+  return Boolean(appState.patient && appState.patient.name && appState.patient.name !== 'Guest Patient');
+}
+
+function unlockCareInterfaces() {
+  const welcomeScreen = document.querySelector('#welcomeScreen');
+  const fullChatSection = document.querySelector('#fullPageAiChatContainer');
+  if (welcomeScreen) welcomeScreen.classList.add('hidden');
+  if (fullChatSection) fullChatSection.classList.remove('hidden');
+  switchAppMode('chat');
+}
+
+function lockCareInterfaces() {
+  const welcomeScreen = document.querySelector('#welcomeScreen');
+  const fullChatSection = document.querySelector('#fullPageAiChatContainer');
+  const manualContainer = document.querySelector('#manualModeContainer');
+  if (welcomeScreen) welcomeScreen.classList.remove('hidden');
+  if (fullChatSection) fullChatSection.classList.add('hidden');
+  if (manualContainer) manualContainer.classList.add('hidden');
+}
+
 window.openPrivacyModal = function() {
   const modal = document.querySelector('#privacyModalOverlay');
   if (modal) modal.classList.remove('hidden');
@@ -3218,15 +3258,24 @@ window.closePrivacyModal = function(e) {
   if (modal) modal.classList.add('hidden');
 };
 
-window.wipeSessionData = function() {
-  if (!confirm('Are you sure? This will clear your login session and all medical history from this device.')) return;
-  localStorage.removeItem('carepath_user');
-  localStorage.removeItem('carepath_medical_history');
+window.deleteUserData = function() {
+  if (!confirm('Delete your Carepath profile, medical history, and saved session from this browser? This cannot be undone.')) return;
+
+  Object.keys(localStorage)
+    .filter(key => key.startsWith('carepath_'))
+    .forEach(key => localStorage.removeItem(key));
+  Object.keys(sessionStorage)
+    .filter(key => key.startsWith('carepath_'))
+    .forEach(key => sessionStorage.removeItem(key));
+
   appState.patient = { name: 'Guest Patient', city: 'Hyderabad', age: 28, phone: '', email: '', gender: 'Male' };
   updateUserHeaderDisplay();
+  lockCareInterfaces();
   closePrivacyModal();
-  showToastNotification('🗑️ All medical session data wiped successfully.');
+  showToastNotification('Your Carepath data was deleted from this browser.');
 };
+
+window.wipeSessionData = window.deleteUserData;
 
 window.openLoginModal = function() {
   const modal = document.querySelector('#loginModalOverlay');
@@ -3254,6 +3303,7 @@ window.handleUserLogin = function(e) {
   localStorage.setItem('carepath_user', JSON.stringify(appState.patient));
 
   updateUserHeaderDisplay();
+  unlockCareInterfaces();
   closeLoginModal();
   showToastNotification(`Welcome, ${name}! Your session history is now active.`);
 };
@@ -3263,10 +3313,17 @@ function updateUserHeaderDisplay() {
   const btnLogin = document.querySelector('#btnLoginHeader');
   if (appState.patient && appState.patient.name && appState.patient.name !== 'Guest Patient') {
     if (nameEl) nameEl.textContent = `${appState.patient.name} (${appState.patient.city || 'Hyderabad'})`;
-    if (btnLogin) btnLogin.innerHTML = `👤 ${appState.patient.name}`;
+    if (btnLogin) {
+      btnLogin.classList.add('hidden');
+      btnLogin.setAttribute('aria-hidden', 'true');
+    }
   } else {
     if (nameEl) nameEl.textContent = 'Guest Patient';
-    if (btnLogin) btnLogin.innerHTML = '🔑 Sign In';
+    if (btnLogin) {
+      btnLogin.classList.remove('hidden');
+      btnLogin.removeAttribute('aria-hidden');
+      btnLogin.innerHTML = `<svg class="header-control-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 20c.7-3.1 3.1-5 7-5s6.3 1.9 7 5"/></svg>Sign In`;
+    }
   }
 }
 
@@ -3276,6 +3333,7 @@ function loadSavedUserSession() {
     if (saved) {
       appState.patient = JSON.parse(saved);
       updateUserHeaderDisplay();
+      unlockCareInterfaces();
     }
   } catch(e) {}
 }
@@ -3460,6 +3518,7 @@ window.handleFullChatSubmit = async function(e) {
 
     if (data.success) {
       const catKey = data.autoCategory || 'headache';
+      syncSidePanelCity(selectedCity);
       selectPainCategory(catKey);
 
       // Record to medical history drawer
@@ -3547,7 +3606,7 @@ function fallbackFullChatReply(sentText, city) {
             `• Permanent joint stiffness, nerve compression, and walking pain.`;
   }
   // Chest / Cardiac
-  else if (textLower.includes('chest') || textLower.includes('heart')) {
+  else if (textLower.includes('chest') || textLower.includes('cheat') || textLower.includes('heart')) {
     catKey = 'chest';
     reply = `🚨 **1. Emergency Condition Analysis:**\n` +
             `Chest symptoms indicate **Potential Cardiac Stress / Severe Angina**.\n\n` +
@@ -3632,6 +3691,7 @@ function fallbackFullChatReply(sentText, city) {
             `• Unchecked progression of initial discomfort.`;
   }
 
+  syncSidePanelCity(city || appState.patient.city || 'Hyderabad');
   selectPainCategory(catKey);
   appendFullChatMessage('bot', reply, []);
 }

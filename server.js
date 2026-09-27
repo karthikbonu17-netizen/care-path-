@@ -55,6 +55,7 @@ const requestHandler = (req, res) => {
         const payload = JSON.parse(body || '{}');
         const rawMsg = (payload.message || '').trim();
         const userMsg = sanitizePII(rawMsg.toLowerCase());
+        const chestPainMentioned = /\b(chest|cheat)\s*(pain|discomfort)\b|\b(pain|discomfort)\s+in\s+(my|the)\s+(chest|cheat)\b/.test(userMsg);
         const attachment = payload.attachment || null; // { name, type, dataUrl }
 
         let reply = '';
@@ -137,7 +138,7 @@ const requestHandler = (req, res) => {
                   `What health symptom or question would you like to discuss today?`;
         }
         // 3. Emergency Symptoms Detection
-        else if (userMsg.includes('chest pain') || userMsg.includes('heart attack') || userMsg.includes('unconscious') || userMsg.includes('stroke') || userMsg.includes('gasping')) {
+        else if (chestPainMentioned || userMsg.includes('heart attack') || userMsg.includes('unconscious') || userMsg.includes('stroke') || userMsg.includes('gasping')) {
           emergency = true;
           urgency = 'emergency';
           autoCategory = 'chest';
