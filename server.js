@@ -31,7 +31,7 @@ function sanitizePII(text) {
     .replace(/([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})/g, '[EMAIL-MASKED]');
 }
 
-const server = http.createServer((req, res) => {
+const requestHandler = (req, res) => {
   // CORS & Header defaults
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -486,8 +486,13 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': MIME_TYPES[ext] || 'application/octet-stream' });
     res.end(data);
   });
-});
+};
 
-server.listen(PORT, () => {
-  console.log(`Carepath server running at http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  const server = http.createServer(requestHandler);
+  server.listen(PORT, () => {
+    console.log(`Carepath server running at http://localhost:${PORT}`);
+  });
+}
+
+module.exports = requestHandler;
