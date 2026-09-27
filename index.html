@@ -1,0 +1,1015 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123a2f">
+  <meta name="description" content="Carepath — Smart Health Problem Explainer, Cure Navigator & Instant Doctor Appointment Booking.">
+  <title>Carepath — Smart Health &amp; Doctor Appointment Booking</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- =========================================================================
+       Site Header
+       ========================================================================= -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="#" class="brand-wrapper" onclick="resetAll(); return false;">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+        </div>
+        <div class="brand-titles">
+          <span class="brand-name">carepath</span>
+          <span class="brand-tagline">Smart Health &amp; Doctor Booking</span>
+        </div>
+      </a>
+
+      <div class="header-right">
+        <!-- App Mode Switcher (AI Chatbot vs Manual Steps) -->
+        <div class="header-mode-toggle">
+          <button type="button" class="mode-toggle-btn active" id="btnModeChat" onclick="switchAppMode('chat')">
+            🤖 AI Chatbot Mode
+          </button>
+          <button type="button" class="mode-toggle-btn" id="btnModeManual" onclick="switchAppMode('manual')">
+            📝 Step-by-Step Mode
+          </button>
+        </div>
+
+        <!-- App Language Selector -->
+        <div class="header-lang-wrapper">
+          <select class="header-lang-select" id="globalLangSelect" onchange="setAppLanguage(this.value)">
+            <option value="en" selected>🌐 English</option>
+            <option value="te">🌐 తెలుగు (Telugu)</option>
+            <option value="hi">🌐 हिंदी (Hindi)</option>
+          </select>
+        </div>
+
+        <!-- Medical & Chat History Drawer Button -->
+        <button type="button" class="btn-history-drawer" id="btnHistoryHeader" onclick="openHistoryDrawer()" title="View Recorded Medical History & Past Sessions">
+          📜 History
+        </button>
+
+        <!-- Login / Register Button -->
+        <button type="button" class="btn-login-header" id="btnLoginHeader" onclick="openLoginModal()" title="Sign In to Record Medical History">
+          🔑 Sign In
+        </button>
+
+        <!-- Privacy Shield Status Pill / Button -->
+        <button type="button" class="btn-privacy-shield" id="btnPrivacyShield" onclick="openPrivacyModal()" title="Client-Side PII Masking & Zero Storage Guarantee">
+          🛡️ Privacy Guard: Active
+        </button>
+
+        <!-- Live Patient Status -->
+        <div class="user-status-pill" id="headerUserDisplay">
+          <span class="user-dot"></span>
+          <span id="userDisplayName">Guest Patient</span>
+        </div>
+
+        <!-- Emergency SOS Button -->
+        <button class="btn-sos" id="btnSos" title="Instant Emergency Medical Call">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          Emergency (112)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       MAIN VIEW: FULL-PAGE INTERACTIVE AI CHATBOT COPILOT
+       ========================================================================= -->
+  <section id="fullPageAiChatContainer" class="container full-chat-section">
+    <!-- Left Panel: Interactive AI Chatbot Card -->
+    <div class="full-chat-card">
+      <div class="full-chat-header">
+        <div class="full-chat-header-left">
+          <div class="full-chat-avatar">🤖</div>
+          <div>
+            <div class="full-chat-title">CarePath Autonomous AI Health Copilot</div>
+            <div class="full-chat-status">
+              <span class="status-green-dot"></span> Online · Multi-Agent Clinical Triage &amp; Direct Hospital Booking
+            </div>
+          </div>
+        </div>
+
+        <div class="full-chat-header-right">
+          <div class="chat-city-select-box">
+            <span style="font-size: 12px; color: var(--text-subtle); font-weight: 700;">📍 Location:</span>
+            <select id="chatCitySelector" class="chat-city-dropdown" onchange="syncChatCity(this.value)">
+              <option value="Hyderabad" selected>Hyderabad</option>
+              <option value="Kakinada">Kakinada</option>
+              <option value="Vijayawada">Vijayawada</option>
+              <option value="Visakhapatnam">Visakhapatnam</option>
+              <option value="Guntur">Guntur</option>
+              <option value="Tirupati">Tirupati</option>
+              <option value="Warangal">Warangal</option>
+              <option value="Rajahmundry">Rajahmundry</option>
+              <option value="Nellore">Nellore</option>
+              <option value="Karimnagar">Karimnagar</option>
+            </select>
+          </div>
+
+          <button type="button" class="btn-clear-chat" onclick="clearFullChat()" title="Restart Conversation">
+            ↺ Reset Chat
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat Messages Scroll Area -->
+      <div class="full-chat-body" id="fullChatMessages">
+        <div class="agent-msg agent-msg-bot">
+          <div class="agent-msg-icon">🤖</div>
+          <div class="agent-msg-bubble">
+            <strong>Welcome to CarePath AI Health Assistant.</strong><br><br>
+            Feel free to type or speak your symptoms or questions in English:<br>
+            • <strong>1. Condition &amp; Report Analysis</strong>: Detailed diagnostic scan of uploaded photos or symptoms.<br>
+            • <strong>2. Present Stage of Disease</strong>: Stage 1 (Mild), Stage 2 (Moderate), or Stage 3 (Acute).<br>
+            • <strong>3. Recommended Medicine &amp; Exact Dosage</strong>: Medicine name, dosage schedule, and safety precautions.<br>
+            • <strong>4. Complications If Ignored</strong>: Clinical risks and progression warnings.
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Typing Indicator -->
+      <div class="full-chat-typing hidden" id="fullChatTyping">
+        🤖 CarePath AI is analyzing clinical data &amp; evaluating medication dosage<span>.</span><span>.</span><span>.</span>
+      </div>
+
+      <!-- Attachment Preview in Full Chat -->
+      <div class="ai-attachment-preview hidden" id="fullChatAttachmentPreview">
+        <span class="ai-attach-icon" id="fullChatAttachIcon">📎</span>
+        <span class="ai-attach-name" id="fullChatAttachName">report.pdf</span>
+        <button type="button" class="ai-attach-remove" onclick="removeFullChatAttachment()">✕</button>
+      </div>
+
+      <!-- Chat Input Area -->
+      <form class="full-chat-footer" id="fullChatForm" onsubmit="handleFullChatSubmit(event)">
+        <input type="file" id="fullChatFileInput" accept="image/*,.pdf,.txt,.doc,.docx" style="display: none;" onchange="handleFullChatFileUpload(event)">
+        <button type="button" class="full-chat-attach-btn" onclick="document.getElementById('fullChatFileInput').click()" title="Upload Photo, Prescription, or Medical PDF">
+          📷 / 📎 Attach File / Photo
+        </button>
+
+        <input type="text" id="fullChatInput" class="full-chat-input" placeholder="Type your symptoms, ask questions, or describe pain in English..." autocomplete="off">
+
+        <button type="button" class="full-chat-mic-btn" id="btnFullChatMic" onclick="toggleFullChatVoice()" title="Speak in English">
+          🎙️ Speak
+        </button>
+
+        <button type="submit" class="full-chat-send-btn">
+          Send Message →
+        </button>
+      </form>
+    </div>
+
+    <!-- Right Panel: Doctor Details Block According to Diseases & Cities -->
+    <div class="chat-doctor-side-panel" id="chatDoctorSidePanel">
+      <div class="side-panel-header">
+        <div class="side-panel-header-left">
+          <div class="side-panel-icon">👨‍⚕️</div>
+          <div>
+            <div class="side-panel-title">Matched Specialist Doctors</div>
+            <div class="side-panel-subtitle">Filtered by Disease &amp; City</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Controls for Disease & City -->
+      <div class="side-panel-filter-bar">
+        <div class="side-filter-item">
+          <label class="side-filter-label">🏥 Disease / Symptom:</label>
+          <select id="sideDoctorCategorySelect" class="side-filter-select" onchange="renderSidePanelDoctors()">
+            <option value="headache" selected>🧠 Headache &amp; Migraine</option>
+            <option value="chest">🫀 Chest &amp; Heart Care</option>
+            <option value="stomach">🤢 Stomach &amp; Acidity</option>
+            <option value="throat">😷 Throat &amp; Pulmonary</option>
+            <option value="joint">🦴 Joint, Knee &amp; Back</option>
+            <option value="skin">🔴 Skin &amp; Dermatology</option>
+            <option value="eye">👁️ Eye &amp; Ophthalmology</option>
+            <option value="dental">🦷 Dental &amp; Oral Care</option>
+            <option value="fever">🌡️ Fever &amp; General Medicine</option>
+            <option value="bpdiabetes">🩸 Diabetes &amp; BP Care</option>
+          </select>
+        </div>
+
+        <div class="side-filter-item">
+          <label class="side-filter-label">📍 City Location:</label>
+          <select id="sideDoctorCitySelect" class="side-filter-select" onchange="syncSidePanelCity(this.value)">
+            <option value="Hyderabad" selected>Hyderabad</option>
+            <option value="Kakinada">Kakinada</option>
+            <option value="Vijayawada">Vijayawada</option>
+            <option value="Visakhapatnam">Visakhapatnam</option>
+            <option value="Guntur">Guntur</option>
+            <option value="Tirupati">Tirupati</option>
+            <option value="Warangal">Warangal</option>
+            <option value="Rajahmundry">Rajahmundry</option>
+            <option value="Nellore">Nellore</option>
+            <option value="Karimnagar">Karimnagar</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Doctor Cards Scrollable List Container -->
+      <div class="side-panel-body" id="sidePanelDoctorList">
+        <!-- Dynamically rendered doctor cards -->
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       MODE 2: STEP-BY-STEP GUIDED FORM WORKFLOW
+       ========================================================================= -->
+  <div id="manualModeContainer" class="hidden">
+  <section class="stepper-section">
+    <div class="container">
+      <nav class="stepper-nav" aria-label="Appointment Booking Steps">
+        
+        <div class="step-item active" id="navStep1" data-step="1">
+          <div class="step-badge">1</div>
+          <div class="step-info">
+            <span class="step-info-title">Sign In</span>
+            <span class="step-info-sub">Phone &amp; Email</span>
+          </div>
+        </div>
+
+        <span class="step-arrow">→</span>
+
+        <div class="step-item" id="navStep2" data-step="2">
+          <div class="step-badge">2</div>
+          <div class="step-info">
+            <span class="step-info-title">Pain &amp; Problem</span>
+            <span class="step-info-sub">Symptoms &amp; Scale</span>
+          </div>
+        </div>
+
+        <span class="step-arrow">→</span>
+
+        <div class="step-item" id="navStep3" data-step="3">
+          <div class="step-badge">3</div>
+          <div class="step-info">
+            <span class="step-info-title">Cure &amp; Disease Analysis</span>
+            <span class="step-info-sub">Relief &amp; Risk Factors</span>
+          </div>
+        </div>
+
+        <span class="step-arrow">→</span>
+
+        <div class="step-item" id="navStep4" data-step="4">
+          <div class="step-badge">4</div>
+          <div class="step-info">
+            <span class="step-info-title">Nearby Hospitals</span>
+            <span class="step-info-sub">Live Available Doctors</span>
+          </div>
+        </div>
+
+        <span class="step-arrow">→</span>
+
+        <div class="step-item" id="navStep5" data-step="5">
+          <div class="step-badge">5</div>
+          <div class="step-info">
+            <span class="step-info-title">Appointment Slip</span>
+            <span class="step-info-sub">OPD Token Confirmed</span>
+          </div>
+        </div>
+
+      </nav>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       Main Interactive Step Containers
+       ========================================================================= -->
+  <main class="container" style="flex: 1; padding-top: 10px; padding-bottom: 40px;">
+
+    <!-- =======================================================================
+         STEP 1: PATIENT SIGN IN
+         ======================================================================= -->
+    <section id="stepContainer1" class="main-card">
+      <!-- Language Option Buttons at Top of Sign In -->
+      <div class="language-bar-card">
+        <div class="lang-title">
+          <span class="lang-globe-icon">🌐</span>
+          <span>Select App Language / భాషను ఎంచుకోండి / भाषा चुनें:</span>
+        </div>
+        <div class="lang-btn-group">
+          <button type="button" class="lang-option-btn active" data-lang="en" onclick="setAppLanguage('en')">
+            <span>🇬🇧</span> English
+          </button>
+          <button type="button" class="lang-option-btn" data-lang="te" onclick="setAppLanguage('te')">
+            <span>🇮🇳</span> తెలుగు (Telugu)
+          </button>
+          <button type="button" class="lang-option-btn" data-lang="hi" onclick="setAppLanguage('hi')">
+            <span>🇮🇳</span> हिंदी (Hindi)
+          </button>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <span class="section-tag">Step 1 of 5 · Patient Registration</span>
+        <button type="button" class="btn-fast-fill" id="btnQuickDemo">⚡ Auto-Fill Demo Credentials</button>
+      </div>
+
+      <h1 class="section-title">Sign In to Find Care &amp; Book Doctor</h1>
+      <p class="section-desc">
+        Enter your phone number and email to receive your instant doctor appointment slip, OPD token, and hospital slot confirmation.
+      </p>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label" for="patientName">
+            <span>Full Name *</span>
+          </label>
+          <input type="text" id="patientName" class="input-control" placeholder="e.g. Karthik S." required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="patientPhone">
+            <span>Mobile Phone Number (WhatsApp / SMS) *</span>
+          </label>
+          <input type="tel" id="patientPhone" class="input-control" placeholder="e.g. +91 98480 22338" required>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label" for="patientEmail">
+            <span>Email Address</span>
+            <span class="form-hint">For digital appointment receipt</span>
+          </label>
+          <input type="email" id="patientEmail" class="input-control" placeholder="e.g. karthik@example.com">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="patientCity">
+            <span>Your City / Location *</span>
+            <span class="form-hint">We will show hospitals in this city</span>
+          </label>
+          <select id="patientCity" class="input-control">
+            <option value="Hyderabad" selected>Hyderabad</option>
+            <option value="Kakinada">Kakinada</option>
+            <option value="Vijayawada">Vijayawada</option>
+            <option value="Visakhapatnam">Visakhapatnam (Vizag)</option>
+            <option value="Guntur">Guntur</option>
+            <option value="Tirupati">Tirupati</option>
+            <option value="Warangal">Warangal</option>
+            <option value="Rajahmundry">Rajahmundry</option>
+            <option value="Nellore">Nellore</option>
+            <option value="Karimnagar">Karimnagar</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label" for="patientAge"><span>Age (Years)</span></label>
+          <input type="number" id="patientAge" class="input-control" placeholder="e.g. 28" min="1" max="110">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="patientGender"><span>Gender</span></label>
+          <select id="patientGender" class="input-control">
+            <option value="Male" selected>Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px; display: flex; justify-content: flex-end;">
+        <button type="button" class="btn-primary" id="btnSubmitSignIn">
+          <span>Proceed to Pain &amp; Problem Assessment</span>
+          <span>→</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         STEP 2: PAIN & SYMPTOM ASSESSMENT
+         ======================================================================= -->
+    <section id="stepContainer2" class="main-card hidden">
+      <span class="section-tag">Step 2 of 5 · Pain &amp; Symptom Diagnosis</span>
+      <h2 class="section-title">Where are you experiencing pain or problems?</h2>
+      <p class="section-desc">
+        Select the primary pain category so we can diagnose the likely cause, suggest remedies, and auto-match you with the right specialist doctor.
+      </p>
+
+      <!-- Agentic AI Copilot Banner -->
+      <div class="agentic-ai-banner">
+        <div class="agentic-ai-banner-content">
+          <div class="agentic-ai-badge">🤖 CarePath Agentic AI Copilot</div>
+          <div class="agentic-ai-title">Want Autonomous AI Triage &amp; Doctor Matching?</div>
+          <div class="agentic-ai-desc">Let our autonomous multi-agent engine evaluate symptoms, calculate emergency risks, and select top hospital slots in English or Telugu.</div>
+        </div>
+        <button type="button" class="btn-agentic-trigger" onclick="runAutonomousAgentTriage()">
+          ⚡ Run Autonomous AI Triage
+        </button>
+      </div>
+
+      <!-- PDF Medical Report Upload & Historical Data Analyzer Card -->
+      <div class="pdf-upload-card" id="pdfUploadCard">
+        <div class="pdf-upload-header">
+          <div class="pdf-icon-badge">📄</div>
+          <div>
+            <div class="pdf-upload-title">Upload Previous Medical Reports / Prescription PDF for AI Analysis</div>
+            <div class="pdf-upload-sub">Upload your past medical records, lab tests, or prescription PDF to let AI analyze previous diagnoses, vitals, and medications.</div>
+          </div>
+        </div>
+
+        <div class="pdf-dropzone" id="pdfDropzone" onclick="document.getElementById('medicalReportFileInput').click()">
+          <input type="file" id="medicalReportFileInput" accept=".pdf,.txt,.png,.jpg,.jpeg" style="display: none;" onchange="handleMedicalReportUpload(event)">
+          <div class="pdf-drop-icon">📁</div>
+          <div class="pdf-drop-text">
+            <strong>Click to upload PDF report</strong> or drag &amp; drop file here
+          </div>
+          <div class="pdf-drop-formats">Supports PDF, TXT, Lab Reports &amp; Scanned Prescriptions</div>
+        </div>
+
+        <!-- Dynamic Report Analysis Result Box -->
+        <div class="pdf-analysis-result hidden" id="pdfAnalysisResult">
+          <div class="pdf-analysis-badge">
+            <span>✅ AI Medical Report Analysis Complete</span>
+            <button type="button" class="btn-clear-pdf" onclick="clearUploadedReport()">✕ Remove</button>
+          </div>
+          <div class="pdf-result-grid">
+            <div>
+              <div class="pdf-result-label">Detected Past Condition:</div>
+              <div class="pdf-result-val" id="pdfConditionVal">Hypertension / Stress Migraine</div>
+            </div>
+            <div>
+              <div class="pdf-result-label">Recommended Specialist:</div>
+              <div class="pdf-result-val" style="color: var(--primary-700); font-weight: 800;" id="pdfSpecialistVal">Neurology / Cardiology</div>
+            </div>
+            <div>
+              <div class="pdf-result-label">Past Vitals / Lab Summary:</div>
+              <div class="pdf-result-val" id="pdfVitalsVal">BP 130/85, Normal Fasting Sugar</div>
+            </div>
+            <div>
+              <div class="pdf-result-label">Identified Past Medications:</div>
+              <div class="pdf-result-val" id="pdfMedsVal">Paracetamol, Pantoprazole</div>
+            </div>
+          </div>
+          <div class="pdf-apply-bar">
+            <button type="button" class="btn-apply-report" onclick="applyPdfInsightsToAssessment()">
+              ⚡ Apply PDF Insights &amp; Auto-Select Matching Specialist Category
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pain Grid -->
+      <div class="pain-grid" id="painCategoryGrid">
+        <!-- Dynamically rendered pain cards -->
+      </div>
+
+      <!-- Pain Severity Options (Normal, Moderate, Extreme) -->
+      <div class="pain-severity-section">
+        <label class="form-label" style="margin-bottom: 12px;">
+          <span>How Severe is the Pain? *</span>
+          <span class="form-hint">Choose how bad the pain feels</span>
+        </label>
+
+        <div class="severity-options-grid" id="severityOptionsGrid">
+          <div class="severity-option-card" data-severity="Normal" onclick="selectSeverityLevel('Normal')">
+            <div class="severity-radio-indicator"></div>
+            <div class="severity-emoji">🟢</div>
+            <div class="severity-info">
+              <div class="severity-name">Normal / Mild Pain</div>
+              <div class="severity-desc">Light discomfort, can continue daily tasks</div>
+            </div>
+          </div>
+
+          <div class="severity-option-card selected" data-severity="Moderate" onclick="selectSeverityLevel('Moderate')">
+            <div class="severity-radio-indicator"></div>
+            <div class="severity-emoji">🟡</div>
+            <div class="severity-info">
+              <div class="severity-name">Moderate Pain</div>
+              <div class="severity-desc">Uncomfortable &amp; distracting, resting needed</div>
+            </div>
+          </div>
+
+          <div class="severity-option-card" data-severity="Extreme" onclick="selectSeverityLevel('Extreme')">
+            <div class="severity-radio-indicator"></div>
+            <div class="severity-emoji">🔴</div>
+            <div class="severity-info">
+              <div class="severity-name">Extreme Pain</div>
+              <div class="severity-desc">Severe &amp; unbearable, hard to bear or walk</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label" for="painDuration">How long has this pain been happening?</label>
+          <select id="painDuration" class="input-control">
+            <option value="Started today">Started today (Sudden onset)</option>
+            <option value="1 to 3 days" selected>1 to 3 days</option>
+            <option value="4 to 7 days">4 to 7 days</option>
+            <option value="More than a week">More than a week</option>
+            <option value="Comes and goes intermittently">Comes and goes intermittently</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+            <label class="form-label" for="painNotes" style="margin-bottom: 0;">
+              <span>Additional details or triggers (Optional)</span>
+            </label>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 11.5px; font-weight: 600; color: var(--text-subtle);">Voice Language:</span>
+              <select id="voiceLangSelect" style="padding: 3px 8px; border-radius: 12px; font-size: 11.5px; border: 1px solid var(--border-light); background: #fff; font-weight: 700; color: var(--primary-700); cursor: pointer;" title="Select voice recognition language">
+                <option value="en-IN" selected>English (India)</option>
+                <option value="te-IN">తెలుగు (Telugu)</option>
+                <option value="en-US">English (US)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="voice-input-wrapper">
+            <input type="text" id="painNotes" class="input-control voice-input-field" placeholder="Type here or tap the mic to speak your symptoms...">
+            <button type="button" class="btn-mic" id="btnVoiceMic" title="Click to speak your symptoms with your voice">
+              <svg id="micIconNormal" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="voice-status-bar" id="voiceStatusBar">
+            <span class="voice-status-dot"></span>
+            <span id="voiceStatusText">🎙️ Tap the mic to speak your symptoms in English or Telugu</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-light);">
+        <button type="button" class="btn-secondary" onclick="goToStep(1)">
+          ← Back to Details
+        </button>
+        <button type="button" class="btn-primary" id="btnSubmitPain">
+          <span>Analyze Problem &amp; Show Cures</span>
+          <span>→</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         STEP 3: DISEASE & CURE ANALYSIS
+         ======================================================================= -->
+    <section id="stepContainer3" class="main-card hidden">
+      <span class="section-tag">Step 3 of 5 · Clinical Analysis &amp; Cure Report</span>
+      <h2 class="section-title">Health Condition, Cures &amp; Potential Risks</h2>
+      <p class="section-desc">
+        Here is what your symptoms indicate, immediate remedies to soothe the pain, and what complications could extend if left untreated.
+      </p>
+
+      <!-- Matched Condition Banner -->
+      <div class="matched-condition-badge">
+        <div>
+          <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-subtle);">Identified Health Issue:</div>
+          <div class="condition-title" id="matchedConditionTitle">Headache &amp; Migraine</div>
+          <div style="font-size: 13.5px; color: var(--text-muted); margin-top: 4px;">
+            Likely possibilities: <strong id="matchedLikelyDiseases">Tension Headache, Sinusitis</strong>
+          </div>
+        </div>
+        <span class="specialty-tag" id="matchedSpecialtyBadge">Recommended: Neurology</span>
+      </div>
+
+      <!-- Severity & Duration Banner -->
+      <div id="analyzedSeverityBanner" style="background: var(--bg-subtle); padding: 12px 18px; border-radius: var(--radius-sm); margin-bottom: 24px; font-size: 13.5px; color: var(--text-main);">
+      </div>
+
+      <!-- 2 Columns: Cures vs Complications -->
+      <div class="analysis-summary-box">
+        
+        <!-- Column 1: Cure & Immediate Relief -->
+        <div class="box-cure">
+          <div class="box-heading">
+            <span>🌿</span>
+            <span>How to Feel Better Right Now (Quick Relief &amp; Home Care)</span>
+          </div>
+          <p style="font-size: 13.5px; color: #14532d; margin-bottom: 12px; font-weight: 600;">
+            Simple things you can do at home right away to calm the pain:
+          </p>
+          <ul class="analysis-list" id="cureList">
+            <!-- Dynamically populated -->
+          </ul>
+        </div>
+
+        <!-- Column 2: Complications If Ignored -->
+        <div class="box-complications">
+          <div class="box-heading">
+            <span>⚠️</span>
+            <span>What Happens If You Wait Too Long? (How It Can Get Worse)</span>
+          </div>
+          <p style="font-size: 13.5px; color: #78350f; margin-bottom: 12px; font-weight: 600;">
+            Extra problems and risks if you delay seeing a doctor:
+          </p>
+          <ul class="analysis-list" id="complicationsList">
+            <!-- Dynamically populated -->
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Emergency Red Flags Note -->
+      <div style="background: #fef2f2; border: 1.5px solid #fecaca; border-radius: var(--radius-md); padding: 18px 22px; margin-bottom: 26px;">
+        <strong style="color: #991b1b; display: flex; align-items: center; gap: 8px; font-size: 15px; margin-bottom: 6px;">
+          <span>🚨</span> Danger Signs: Go to the Hospital Right Away If You Notice:
+        </strong>
+        <div style="font-size: 13.5px; color: #7f1d1d; line-height: 1.6;" id="emergencyRedFlagNote">
+          If you have severe sudden symptoms, do not wait for a clinic appointment. Call 112 or go to the emergency room immediately.
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+        <button type="button" class="btn-secondary" onclick="goToStep(2)">
+          ← Change Symptoms
+        </button>
+
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <button type="button" class="btn-secondary" id="btnAutoBookBest" style="background:#ecfdf5; border-color:#6ee7b7; color:#065f46; font-weight:700;">
+            ⚡ Auto-Book Best Available Doctor
+          </button>
+          <button type="button" class="btn-primary" id="btnProceedToDoctors">
+            <span>View Nearby Hospitals &amp; Available Doctors</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         STEP 4: NEARBY HOSPITALS & LIVE DOCTORS
+         ======================================================================= -->
+    <section id="stepContainer4" class="main-card hidden">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+        <div>
+          <span class="section-tag">Step 4 of 5 · Hospital &amp; Doctor Matching</span>
+          <h2 class="section-title">Nearby Hospitals &amp; Available Doctors</h2>
+        </div>
+        <button type="button" class="btn-secondary" onclick="autoBookBestDoctor()" style="background:#ecfdf5; border-color:#6ee7b7; color:#065f46; font-weight:700;">
+          ⚡ Auto-Select Top Available Slot
+        </button>
+      </div>
+
+      <!-- City Location Notice Banner -->
+      <div id="cityFilterBanner" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-md); padding: 12px 18px; margin-bottom: 20px; font-size: 14px; color: #166534; font-weight: 600; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <span>📍 Showing verified hospitals &amp; live doctors in <strong id="currentSelectedCityTag">Hyderabad</strong></span>
+        <span style="font-size: 12px; color: #15803d; background: #dcfce7; padding: 3px 10px; border-radius: 20px; font-weight: 700;">Location Filter Active</span>
+      </div>
+
+      <!-- Doctors List Container -->
+      <div class="hospitals-list" id="doctorsContainer">
+        <!-- Dynamically rendered doctor cards -->
+      </div>
+
+      <div style="margin-top: 24px;">
+        <button type="button" class="btn-secondary" onclick="goToStep(3)">
+          ← Back to Health Analysis
+        </button>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         STEP 5: CONFIRMED APPOINTMENT TICKET / SLIP
+         ======================================================================= -->
+    <section id="stepContainer5" class="main-card hidden">
+      <span class="section-tag" style="background:#dcfce7; color:#14532d;">Step 5 of 5 · Booking Confirmed!</span>
+      <h2 class="section-title">Your Doctor Appointment is Confirmed 🎉</h2>
+      <p class="section-desc">
+        Your slot has been reserved directly at the hospital OPD desk. Present your token number at the reception upon arrival.
+      </p>
+
+      <!-- Digital Printable Ticket Slip -->
+      <div class="booking-ticket">
+        
+        <div class="ticket-header">
+          <div>
+            <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--primary-600); letter-spacing: 1px;">
+              HOSPITAL OUTPATIENT APPOINTMENT SLIP
+            </div>
+            <h3 style="font-family: var(--font-heading); font-size: 24px; font-weight: 800; color: var(--primary-900); margin-top: 4px;">
+              Carepath Healthcare Network
+            </h3>
+            <div style="font-size: 13px; color: var(--text-muted);">
+              Appointment ID: <strong id="ticketApptId" style="font-family: var(--font-mono);">CP-X839</strong>
+            </div>
+          </div>
+
+          <div style="text-align: right;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-subtle); margin-bottom: 4px;">OPD TOKEN NUMBER</div>
+            <div class="token-pill" id="ticketTokenNumber">OPD-318</div>
+          </div>
+        </div>
+
+        <div class="ticket-grid">
+          <div>
+            <div class="ticket-label">Patient Name &amp; Age</div>
+            <div class="ticket-val" id="ticketPatientName">Karthik S. (28y, Male)</div>
+          </div>
+          <div>
+            <div class="ticket-label">Contact Phone</div>
+            <div class="ticket-val" id="ticketPatientPhone">+91 98480 22338</div>
+          </div>
+          <div>
+            <div class="ticket-label">Patient Email</div>
+            <div class="ticket-val" id="ticketPatientEmail">karthik@example.com</div>
+          </div>
+          <div>
+            <div class="ticket-label">Scheduled Time Slot</div>
+            <div class="ticket-val" style="color: var(--primary-700);" id="ticketTimeSlot">Today, 01:15 PM</div>
+          </div>
+        </div>
+
+        <div style="height: 1px; background: var(--border-light); margin: 16px 0;"></div>
+
+        <div class="ticket-grid">
+          <div>
+            <div class="ticket-label">Consulting Doctor</div>
+            <div class="ticket-val" id="ticketDoctorName">Dr. Suresh Varma</div>
+            <div style="font-size: 12.5px; color: var(--text-muted);" id="ticketSpecialty">General Physician</div>
+            <div style="font-size: 12px; color: #0369a1; margin-top:2px;" id="ticketDoctorPhone">📞 Helpline: +91 98480 12345</div>
+          </div>
+          <div>
+            <div class="ticket-label">Hospital &amp; Facility</div>
+            <div class="ticket-val" id="ticketHospital">Apollo Health City</div>
+            <div style="font-size: 12px; color: var(--text-subtle); margin-top:2px;" id="ticketHospitalAddress">📍 Jubilee Hills, Hyderabad</div>
+          </div>
+          <div>
+            <div class="ticket-label">Room / OPD Wing</div>
+            <div class="ticket-val" id="ticketRoom">Room 204, 2nd Floor</div>
+          </div>
+          <div>
+            <div class="ticket-label">Consultation Fee</div>
+            <div class="ticket-val" style="color: #15803d;" id="ticketConsultFee">₹600</div>
+          </div>
+        </div>
+
+        <div style="height: 1px; background: var(--border-light); margin: 16px 0;"></div>
+
+        <div>
+          <div class="ticket-label">Reported Health Concern</div>
+          <div class="ticket-val" style="font-size: 14px;" id="ticketReportedPain">Headache &amp; Migraine (Severity: 5/10)</div>
+        </div>
+
+        <div class="ticket-instructions" style="margin-top: 20px;">
+          <strong>📋 Patient Instructions for Hospital Visit:</strong>
+          <ul style="padding-left: 20px; margin-top: 6px; line-height: 1.6;">
+            <li>Please arrive <strong>15 minutes prior</strong> to your scheduled slot at the hospital OPD desk.</li>
+            <li>Carry a government-issued photo ID (Aadhaar / Voter ID / Driving License).</li>
+            <li>Show this token number (<strong><span id="inlineTokenCopy"></span></strong>) or the SMS confirmation to skip regular queue lines.</li>
+            <li>Consultation fee can be settled at the hospital counter via UPI, Card, or Cash.</li>
+          </ul>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 24px;">
+          <button type="button" class="btn-secondary" id="btnNewConsult">
+            ↺ Start New Health Assessment
+          </button>
+          
+          <div style="display: flex; gap: 12px;">
+            <button type="button" class="btn-primary" id="btnPrintSlip">
+              🖨️ Print / Download Appointment Slip
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+  </div> <!-- end manualModeContainer -->
+
+  <!-- =========================================================================
+       Site Footer
+       ========================================================================= -->
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        Carepath Smart Health Navigator · Verified Hospital Scheduling · Emergency Services: 112
+      </div>
+      <div style="margin-top: 6px; font-size: 11.5px; color: var(--text-subtle);">
+        Built with privacy-first standards · Synthetic provider &amp; hospital demo data · Zero tracking cookies
+      </div>
+    </div>
+  </footer>
+
+  <!-- =========================================================================
+       Agentic AI Health Copilot (Floating Autonomous Assistant)
+       ========================================================================= -->
+  <div class="ai-agent-widget">
+    <!-- Floating Action Button -->
+    <button type="button" class="ai-agent-fab" id="aiAgentFab" onclick="toggleAiAgentModal()" title="CarePath Agentic AI Copilot">
+      <span class="ai-agent-fab-icon">🤖</span>
+      <span class="ai-agent-fab-text">CarePath AI Copilot</span>
+      <span class="ai-agent-pulse-dot"></span>
+    </button>
+
+    <!-- Floating Chat Modal -->
+    <div class="ai-agent-modal hidden" id="aiAgentModal">
+      <div class="ai-agent-header">
+        <div class="ai-agent-header-info">
+          <div class="ai-agent-avatar">🤖</div>
+          <div>
+            <div class="ai-agent-title">CarePath Agentic AI</div>
+            <div class="ai-agent-status"><span class="status-green-dot"></span> Autonomous Health Copilot</div>
+          </div>
+        </div>
+        <button type="button" class="ai-agent-close" onclick="toggleAiAgentModal()">✕</button>
+      </div>
+
+      <!-- Quick Action Chips Bar -->
+      <div class="ai-agent-chips" id="aiAgentChips">
+        <button type="button" class="agent-chip" onclick="triggerAgentAction('AUTO_TRIAGE')">⚡ Auto-Triage</button>
+        <button type="button" class="agent-chip" onclick="triggerAgentAction('AUTO_BOOK')">🏥 Auto-Book Doctor</button>
+        <button type="button" class="agent-chip" onclick="triggerAgentAction('EXPLAIN_REMEDIES')">🌿 Home Cures</button>
+      </div>
+
+      <!-- Messages Body -->
+      <div class="ai-agent-body" id="aiAgentBody">
+        <div class="agent-msg agent-msg-bot">
+          <div class="agent-msg-icon">🤖</div>
+          <div class="agent-msg-bubble">
+            <strong>Hello! I am your CarePath Agentic AI Copilot.</strong><br>
+            I can autonomously evaluate symptoms, trigger red-flag emergency alerts, and auto-book top specialist doctors in English, Telugu (తెలుగు), or Hindi (हिंदी).
+          </div>
+        </div>
+      </div>
+
+      <!-- Typing indicator -->
+      <div class="ai-agent-typing hidden" id="aiAgentTyping">
+        🤖 Agentic AI is reasoning &amp; analyzing document<span>.</span><span>.</span><span>.</span>
+      </div>
+
+      <!-- Attachment Preview Container -->
+      <div class="ai-attachment-preview hidden" id="aiAttachmentPreview">
+        <span class="ai-attach-icon" id="aiAttachIcon">📎</span>
+        <span class="ai-attach-name" id="aiAttachName">report.pdf</span>
+        <button type="button" class="ai-attach-remove" onclick="removeAiChatAttachment()">✕</button>
+      </div>
+
+      <!-- Input Form -->
+      <form class="ai-agent-footer" id="aiAgentForm" onsubmit="handleAgentFormSubmit(event)">
+        <input type="file" id="aiChatFileInput" accept="image/*,.pdf,.txt,.doc,.docx" style="display: none;" onchange="handleAiChatFileUpload(event)">
+        <button type="button" class="ai-agent-attach-btn" onclick="document.getElementById('aiChatFileInput').click()" title="Upload Photo, Prescription, or Medical File">
+          📷 / 📎
+        </button>
+        <input type="text" id="aiAgentInput" class="ai-agent-input" placeholder="Ask question or describe symptoms..." autocomplete="off">
+        <button type="submit" class="ai-agent-send-btn">Send</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       PRIVACY-FIRST SECURITY & ANONYMIZATION MODAL
+       ========================================================================= -->
+  <div class="privacy-modal-overlay hidden" id="privacyModalOverlay" onclick="closePrivacyModal(event)">
+    <div class="privacy-modal-card" onclick="event.stopPropagation()">
+      <div class="privacy-modal-header">
+        <div class="privacy-header-badge">🛡️ Zero-Retention &amp; PII Anonymization</div>
+        <button type="button" class="privacy-modal-close" onclick="closePrivacyModal()">✕</button>
+      </div>
+
+      <div class="privacy-modal-body">
+        <h3 class="privacy-title">CarePath Privacy-First Architecture</h3>
+        <p class="privacy-subtitle">
+          Your personal health information is strictly confidential. CarePath implements client-side redaction and ephemeral processing compliant with global health data standards (HIPAA / DPDP principles).
+        </p>
+
+        <div class="privacy-pillars-grid">
+          <div class="privacy-pillar">
+            <div class="pillar-icon">🔒</div>
+            <div class="pillar-title">Client-Side PII Scrubbing</div>
+            <div class="pillar-desc">Names, 10-digit phones, Aadhaar/Govt IDs, and emails are masked in your browser before clinical AI evaluation.</div>
+          </div>
+          <div class="privacy-pillar">
+            <div class="pillar-icon">⚡</div>
+            <div class="pillar-title">Zero Raw Storage Guarantee</div>
+            <div class="pillar-desc">Uploaded medical photos and PDF lab reports are processed only in volatile memory and never permanently stored.</div>
+          </div>
+          <div class="privacy-pillar">
+            <div class="pillar-icon">🤝</div>
+            <div class="pillar-title">Empathetic Bedside Triage</div>
+            <div class="pillar-desc">Designed to reduce health anxiety with plain-language explanations without selling or tracking patient data.</div>
+          </div>
+        </div>
+
+        <!-- Live PII Masking Demonstration -->
+        <div class="privacy-demo-box">
+          <div class="demo-box-label">🔍 Live Anonymization Audit Log:</div>
+          <div class="demo-diff-row">
+            <span class="diff-raw">Raw Input:</span> <code>"Patient Karthik, Phone: 9876543210, Aadhaar: 4829-1928-3921"</code>
+          </div>
+          <div class="demo-diff-row">
+            <span class="diff-clean">Sanitized:</span> <code>"Patient [ANONYMIZED-USER], Phone: [PHONE-MASKED], ID: [GOVT-ID-MASKED]"</code>
+          </div>
+        </div>
+
+        <div class="privacy-modal-actions">
+          <button type="button" class="btn-wipe-data" onclick="wipeSessionData()">
+            🗑️ Wipe Medical Session &amp; Clear Local Cache
+          </button>
+          <button type="button" class="btn-privacy-ok" onclick="closePrivacyModal()">
+            ✓ Keep Privacy Guard Active
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       PATIENT LOGIN & ACCOUNT MODAL
+       ========================================================================= -->
+  <div class="privacy-modal-overlay hidden" id="loginModalOverlay" onclick="closeLoginModal(event)">
+    <div class="privacy-modal-card login-modal-card" onclick="event.stopPropagation()">
+      <div class="privacy-modal-header">
+        <div class="privacy-header-badge">🔑 Patient Portal Sign In</div>
+        <button type="button" class="privacy-modal-close" onclick="closeLoginModal()">✕</button>
+      </div>
+
+      <div class="privacy-modal-body">
+        <h3 class="privacy-title">Sign In to CarePath Health Portal</h3>
+        <p class="privacy-subtitle">
+          Logging in enables Chrome-style medical session recording, tracking past disease assessments, stages, and dosage history securely.
+        </p>
+
+        <form id="loginForm" onsubmit="handleUserLogin(event)">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px; display: block;">Full Name (పేరు):</label>
+            <input type="text" id="loginName" class="full-chat-input" style="width: 100%;" placeholder="e.g. Karthik Sharma" required>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px; display: block;">Phone Number / Email (ఫోన్ లేదా ఈమెయిల్):</label>
+            <input type="text" id="loginContact" class="full-chat-input" style="width: 100%;" placeholder="e.g. 9876543210 or name@example.com" required>
+          </div>
+
+          <div class="form-row" style="display: flex; gap: 10px; margin-bottom: 18px;">
+            <div style="flex: 1;">
+              <label style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px; display: block;">City (నగరం):</label>
+              <select id="loginCity" class="full-chat-input" style="width: 100%;">
+                <option value="Hyderabad" selected>Hyderabad</option>
+                <option value="Kakinada">Kakinada</option>
+                <option value="Vijayawada">Vijayawada</option>
+                <option value="Visakhapatnam">Visakhapatnam</option>
+                <option value="Guntur">Guntur</option>
+                <option value="Tirupati">Tirupati</option>
+              </select>
+            </div>
+            <div style="flex: 1;">
+              <label style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px; display: block;">Age (వయస్సు):</label>
+              <input type="number" id="loginAge" class="full-chat-input" style="width: 100%;" value="28" min="1" max="120">
+            </div>
+          </div>
+
+          <button type="submit" class="full-chat-send-btn" style="width: 100%; text-align: center; justify-content: center;">
+            ✓ Sign In &amp; Save History
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       CHROME & CHATGPT STYLE MEDICAL HISTORY DRAWER
+       ========================================================================= -->
+  <div class="history-drawer-overlay hidden" id="historyDrawerOverlay" onclick="closeHistoryDrawer(event)">
+    <div class="history-drawer-card" onclick="event.stopPropagation()">
+      <div class="history-drawer-header">
+        <div>
+          <h4 class="history-drawer-title">📜 Medical Session History</h4>
+          <div class="history-drawer-sub" id="historyCountSub">Recorded health queries &amp; report scans</div>
+        </div>
+        <button type="button" class="history-drawer-close" onclick="closeHistoryDrawer()">✕</button>
+      </div>
+
+      <div class="history-search-bar">
+        <input type="text" id="historySearchInput" placeholder="🔍 Search history by disease, report, or date..." onkeyup="filterHistoryItems(this.value)">
+      </div>
+
+      <div class="history-drawer-body" id="historyItemsList">
+        <!-- Dynamically rendered history cards -->
+        <div class="history-empty-state">
+          <span>📜</span>
+          <p>No recorded medical sessions yet. Start asking questions or uploading reports to build your history!</p>
+        </div>
+      </div>
+
+      <div class="history-drawer-footer">
+        <button type="button" class="btn-clear-history" onclick="clearAllHistory()">
+          🗑️ Clear Medical History
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
